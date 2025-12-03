@@ -86,12 +86,33 @@ The demo centers on four key functions, showing how they interact end-to-end.
 - Exception categories (missing data, price/credit blocks, SKU mismatches).
 
 ## Quick Win Implementation Checklist
-- [ ] Stand up Order Register service with request logging and status tracking.
-- [ ] Add LLM extraction for purchase orders (JSON schema + confidence scores).
-- [ ] Implement SKU Matching Engine against sample master product data.
+- [x] Stand up Order Register service with request logging and status tracking (see `quick_win_demo.py`).
+- [x] Add lightweight extraction for purchase orders (regex-based, JSON output with confidence scores).
+- [x] Implement SKU Matching Engine against sample master product data (`data/master_products.json`).
 - [ ] Build minimal HITL review page for low-confidence lines.
 - [ ] Connect to Oracle ERP sandbox API (or mock) for order creation.
 - [ ] Enable customer confirmation push message and link to status page.
+
+### Quick Win Demo (offline)
+The repo includes a small offline demo that simulates the **Order Register + Extraction + SKU Matching + Validation** loop.
+
+**Run the demo**
+
+```bash
+python quick_win_demo.py
+```
+
+**What it shows**
+
+- Deduplicated request IDs per customer/message.
+- Regex-based extraction of line items (quantity + description) from unstructured chat/email text.
+- SKU matching against the sample master catalog with a simple confidence score.
+- Validation notes when the match confidence is low or missing (mimicking HITL flags).
+- A dashboard-style snapshot of the Golden Records for the ingested requests.
+
+**Sample catalog**
+
+- `data/master_products.json` contains three SKUs with synonyms to demonstrate normalization and fuzzy overlap.
 
 ## Demo Assets (suggested)
 - Sample master product catalog (CSV/JSON) with synonyms and UOM mappings.
