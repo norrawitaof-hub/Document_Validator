@@ -99,8 +99,14 @@ The repo includes a small offline demo that simulates the **Order Register + Ext
 **Run the demo**
 
 ```bash
+# CLI output + HTML dashboard (default)
 python quick_win_demo.py
+
+# Skip writing HTML
+python quick_win_demo.py --no-html
 ```
+
+The default run writes **`quick_win_dashboard.html`**—open it in any browser to share a visual snapshot without running Python.
 
 **What it shows**
 
@@ -108,7 +114,7 @@ python quick_win_demo.py
 - Regex-based extraction of line items (quantity + description) from unstructured chat/email text.
 - SKU matching against the sample master catalog with a simple confidence score.
 - Validation notes when the match confidence is low or missing (mimicking HITL flags).
-- A dashboard-style snapshot of the Golden Records for the ingested requests.
+- A dashboard-style snapshot of the Golden Records for the ingested requests (also rendered as HTML).
 
 **Sample catalog**
 

@@ -4,9 +4,13 @@ This script simulates a minimal Order Register with basic extraction,
 SKU matching, and validation to create a "Golden Record" from
 unstructured order messages. It uses a small sample catalog and
 messages to illustrate the quick win phase before a full LLM pipeline.
+
+Pass ``--html <path>`` to export an embeddable HTML dashboard that
+anyone can open without running Python.
 """
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import re
@@ -169,7 +173,163 @@ def demo_messages() -> List[Dict[str, str]]:
     ]
 
 
-def run_demo():
+def render_html_dashboard(records: List[Dict]) -> str:
+    rows = []
+    for rec in records:
+        lines_html = "".join(
+            f"<li><strong>{line['quantity']}×</strong> {line['source_description']}"
+            f" → <code>{line['matched_sku'] or '—'}</code>"
+            f" <span class='chip'>{line['confidence']:.2f}</span></li>"
+            for line in rec["lines"]
+        )
+        notes_html = (
+            "".join(f"<li>{note}</li>" for note in rec["validation_notes"])
+            or "<li>None</li>"
+        )
+        rows.append(
+            f"""
+<article class='card'>
+  <header>
+    <div>
+      <div class='label'>Request ID</div>
+      <div class='value'>{rec['request_id']}</div>
+    </div>
+    <div>
+      <div class='label'>Customer</div>
+      <div class='value'>{rec['customer']}</div>
+    </div>
+    <div>
+      <div class='label'>Channel</div>
+      <div class='value'>{rec['channel']}</div>
+    </div>
+    <div class='status {rec['status']}'>{rec['status']}</div>
+  </header>
+  <div class='section'>
+    <div class='section-title'>Line items</div>
+    <ul class='list'>
+      {lines_html}
+    </ul>
+  </div>
+  <div class='section'>
+    <div class='section-title'>Validation notes</div>
+    <ul class='list notes'>
+      {notes_html}
+    </ul>
+  </div>
+</article>
+"""
+        )
+
+    return f"""
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'/>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+  <title>Quick Win Demo Dashboard</title>
+  <style>
+    :root {{
+      --bg: #0f172a;
+      --card: #111827;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #3b82f6;
+      --warning: #f97316;
+      --border: #1f2937;
+    }}
+    body {{
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 10% 20%, #1e293b 0, #0f172a 25%),
+                  radial-gradient(circle at 80% 0, #0b2345 0, #0f172a 35%),
+                  #0f172a;
+      color: var(--text);
+    }}
+    .page {{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px 64px;
+    }}
+    h1 {{
+      margin: 0 0 8px;
+      font-size: 32px;
+      letter-spacing: -0.02em;
+    }}
+    .subtitle {{ color: var(--muted); margin-bottom: 24px; }}
+    .grid {{
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }}
+    .card {{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }}
+    header {{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }}
+    .label {{ color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }}
+    .value {{ font-weight: 600; }}
+    .status {{
+      justify-self: end;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: 1px solid var(--border);
+      background: rgba(59, 130, 246, 0.12);
+      color: var(--text);
+    }}
+    .status.needs_review {{ background: rgba(249, 115, 22, 0.18); color: #fb923c; }}
+    .section {{ margin-top: 10px; }}
+    .section-title {{ color: var(--muted); font-size: 13px; margin-bottom: 6px; }}
+    .list {{ list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }}
+    .list li {{
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }}
+    .list.notes li {{ color: var(--muted); font-size: 13px; }}
+    .chip {{
+      margin-left: auto;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.16);
+      font-size: 12px;
+      color: #bfdbfe;
+      border: 1px solid rgba(59, 130, 246, 0.35);
+    }}
+    code {{ background: rgba(255, 255, 255, 0.05); padding: 2px 6px; border-radius: 6px; }}
+  </style>
+</head>
+<body>
+  <div class='page'>
+    <h1>Quick Win Demo Dashboard</h1>
+    <div class='subtitle'>Golden Records created from the sample Order Register.</div>
+    <div class='grid'>
+      {''.join(rows)}
+    </div>
+  </div>
+</body>
+</html>
+"""
+
+
+def run_demo(html_path: Optional[Path] = None):
     pipeline = QuickWinPipeline()
     print("=== Quick Win Demo ===")
     for payload in demo_messages():
@@ -190,6 +350,25 @@ def run_demo():
     for rec in pipeline.dashboard():
         print(json.dumps(rec, indent=2))
 
+    if html_path:
+        records = pipeline.dashboard()
+        html_path.write_text(render_html_dashboard(records))
+        print(f"\nSaved HTML dashboard to {html_path.resolve()}")
+
 
 if __name__ == "__main__":
-    run_demo()
+    parser = argparse.ArgumentParser(description="Quick win order register demo")
+    parser.add_argument(
+        "--html",
+        type=Path,
+        default=Path("quick_win_dashboard.html"),
+        help="Path to save an HTML dashboard of the demo output.",
+    )
+    parser.add_argument(
+        "--no-html",
+        action="store_true",
+        help="Skip writing the HTML dashboard.",
+    )
+    args = parser.parse_args()
+
+    run_demo(html_path=None if args.no_html else args.html)
