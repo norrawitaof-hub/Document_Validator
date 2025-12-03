@@ -1,0 +1,23 @@
+[
+  {
+    "sku_id": "SKU-001",
+    "name": "Copper Wire 1.5mm",
+    "synonyms": ["1.5mm wire", "copper cable 1.5"],
+    "uom": "roll",
+    "price": 42.5
+  },
+  {
+    "sku_id": "SKU-002",
+    "name": "PVC Pipe 2-inch",
+    "synonyms": ["2\" pvc", "pvc pipe 2in", "pvc 2"],
+    "uom": "piece",
+    "price": 7.2
+  },
+  {
+    "sku_id": "SKU-003",
+    "name": "Industrial Switch 8-port",
+    "synonyms": ["8p switch", "8-port industrial switch"],
+    "uom": "unit",
+    "price": 199
+  }
+]
