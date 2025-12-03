@@ -99,6 +99,13 @@ The repo includes a small offline demo that simulates the **Order Register + Ext
 **Run the demo**
 
 ```bash
+# 1) (Optional) Create a virtual environment
+python3 -m venv .venv && source .venv/bin/activate
+
+# 2) Install dependencies (standard library only; no packages to install)
+python -c "import json, pathlib; print('ready')"
+
+# 3) Execute the demo
 # CLI output + HTML dashboard (default)
 python quick_win_demo.py
 
@@ -106,7 +113,7 @@ python quick_win_demo.py
 python quick_win_demo.py --no-html
 ```
 
-The default run writes **`quick_win_dashboard.html`**—open it in any browser to share a visual snapshot without running Python.
+After running the default command, open the generated **`quick_win_dashboard.html`** in your browser to share a static snapshot of the results. The CLI output shows the matched SKUs and validation notes for each sample order.
 
 **What it shows**
 
